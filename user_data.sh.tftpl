@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euxo pipefail
+
+dnf install -y docker
+systemctl enable --now docker
+
+# No keys here: the AWS SDK inside the container picks up the instance role from IMDSv2.
+mkdir -p /opt/privatebin
+cat > /opt/privatebin/conf.php <<'CONF'
+[main]
+name = "PrivateBin"
+
+[model]
+class = S3Storage
+
+[model_options]
+region = "${region}"
+version = "latest"
+bucket = "${bucket}"
+prefix = "notes"
+CONF
+chmod 0644 /opt/privatebin/conf.php
+
+docker run -d --name privatebin --restart unless-stopped \
+  -p ${port}:8080 \
+  -v /opt/privatebin/conf.php:/srv/cfg/conf.php:ro \
+  --security-opt no-new-privileges --cap-drop ALL \
+  privatebin/s3:${version}

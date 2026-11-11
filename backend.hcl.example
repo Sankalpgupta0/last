@@ -1,0 +1,5 @@
+bucket       = "REPLACE-WITH-SHARED-STATE-BUCKET"
+key          = "privatebin/terraform.tfstate" # use a unique key per person if the bucket is shared
+region       = "eu-north-1"
+encrypt      = true
+use_lockfile = true # S3-native locking (Terraform >= 1.10): writes <key>.tflock, no DynamoDB table needed
