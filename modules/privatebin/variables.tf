@@ -34,7 +34,7 @@ variable "app_port" {
 variable "privatebin_version" {
   description = "Tag of the privatebin/s3 image."
   type        = string
-  default     = "2.0.6"
+  default     = "2.1.1"
 }
 
 variable "instance_type" {
