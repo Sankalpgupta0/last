@@ -1,0 +1,44 @@
+# Tears the lab down every evening so it does not bill overnight.
+# Needs repo secrets: AWS_ROLE_ARN (an OIDC-assumable role), TF_STATE_BUCKET.
+# Needs repo variables: OWNER, ALLOWED_CIDR (any valid CIDR; destroy does not use it).
+name: destroy-nightly
+
+on:
+  schedule:
+    - cron: "0 18 * * *" # 18:00 UTC daily
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency: terraform-state
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.10"
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-north-1
+
+      - name: init
+        run: |
+          terraform init -input=false \
+            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+            -backend-config="key=privatebin/terraform.tfstate" \
+            -backend-config="region=eu-north-1" \
+            -backend-config="use_lockfile=true"
+
+      - name: destroy
+        run: terraform destroy -auto-approve -input=false
+        env:
+          TF_VAR_owner: ${{ vars.OWNER }}
+          TF_VAR_allowed_cidr: ${{ vars.ALLOWED_CIDR }}

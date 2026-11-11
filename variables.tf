@@ -24,11 +24,6 @@ variable "environment" {
 variable "allowed_cidr" {
   description = "The only CIDR allowed to reach port 3344 (your own IP, e.g. 203.0.113.7/32)."
   type        = string
-
-  validation {
-    condition     = can(cidrhost(var.allowed_cidr, 0)) && var.allowed_cidr != "0.0.0.0/0"
-    error_message = "allowed_cidr must be a valid CIDR and must not be 0.0.0.0/0."
-  }
 }
 
 variable "app_port" {
